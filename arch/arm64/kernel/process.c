@@ -475,3 +475,13 @@ unsigned long arch_randomize_brk(struct mm_struct *mm)
 
 	return randomize_range(base, range_end, 0) ? : base;
 }
+
+void arch_cpu_idle_enter(void)
+{
+	idle_notifier_call_chain(IDLE_START);
+}
+
+void arch_cpu_idle_exit(void)
+{
+	idle_notifier_call_chain(IDLE_END);
+}
