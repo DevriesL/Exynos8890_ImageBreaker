@@ -41,6 +41,7 @@
 #include <linux/rcupdate.h>
 #include <linux/notifier.h>
 #include <linux/delay.h>
+#include <linux/zcache.h>
 
 static uint32_t lowmem_debug_level = 1;
 static short lowmem_adj[6] = {
@@ -110,7 +111,7 @@ static unsigned long lowmem_scan(struct shrinker *s, struct shrink_control *sc)
 	short selected_oom_score_adj;
 	int array_size = ARRAY_SIZE(lowmem_adj);
 	int other_free = global_page_state(NR_FREE_PAGES) - totalreserve_pages;
-	int other_file = global_page_state(NR_FILE_PAGES) -
+	int other_file = global_page_state(NR_FILE_PAGES) + zcache_pages() -
 						global_page_state(NR_SHMEM) -
 						total_swapcache_pages();
 	struct reclaim_state *reclaim_state = current->reclaim_state;
@@ -203,6 +204,7 @@ static unsigned long lowmem_scan(struct shrinker *s, struct shrink_control *sc)
 		lowmem_print(1, "Killing '%s' (%d), adj %hd,\n" \
 				"   to free %ldkB on behalf of '%s' (%d) because\n" \
 				"   cache %ldkB is below limit %ldkB for oom_score_adj %hd\n" \
+				"   Total zcache is %ldkB\n" \
 				"   Free memory is %ldkB above reserved\n",
 			     selected->comm, selected->pid,
 			     selected_oom_score_adj,
@@ -211,6 +213,7 @@ static unsigned long lowmem_scan(struct shrinker *s, struct shrink_control *sc)
 			     other_file * (long)(PAGE_SIZE / 1024),
 			     minfree * (long)(PAGE_SIZE / 1024),
 			     min_score_adj,
+				 (long)zcache_pages() * (long)(PAGE_SIZE / 1024),
 			     other_free * (long)(PAGE_SIZE / 1024));
 		lowmem_deathpending_timeout = jiffies + HZ;
 		set_tsk_thread_flag(selected, TIF_MEMDIE);
