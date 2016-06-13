@@ -48,6 +48,7 @@ static struct ion_platform_heap ion_noncontig_heap = {
 
 static struct exynos_ion_platform_heap plat_heaps[ION_NUM_HEAPS];
 
+#ifdef CONFIG_EXYNOS_CONTENT_PATH_PROTECTION
 static int __find_platform_heap_id(unsigned int heap_id)
 {
 	int i;
@@ -63,7 +64,6 @@ static int __find_platform_heap_id(unsigned int heap_id)
 	return i;
 }
 
-#ifdef CONFIG_EXYNOS_CONTENT_PATH_PROTECTION
 static int __ion_secure_protect_buffer(struct exynos_ion_platform_heap *pdata,
 					struct ion_buffer *buffer)
 {
