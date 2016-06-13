@@ -1001,6 +1001,7 @@ static noinline int avc_denied(u32 ssid, u32 tsid,
 				u16 cmd, unsigned flags,
 				struct av_decision *avd)
 {
+#ifndef CONFIG_SECURITY_SELINUX_FORCE_PERMISSIVE
 	if (flags & AVC_STRICT)
 		return -EACCES;
 
@@ -1058,7 +1059,7 @@ static noinline int avc_denied(u32 ssid, u32 tsid,
 	if (selinux_enforcing && !(avd->flags & AVD_FLAGS_PERMISSIVE))
 #endif
 		return -EACCES;
-
+#endif
 	avc_update_node(AVC_CALLBACK_GRANT, requested, cmd, ssid,
 				tsid, tclass, avd->seqno, NULL, flags);
 	return 0;

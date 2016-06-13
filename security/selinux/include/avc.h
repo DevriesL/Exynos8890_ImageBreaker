@@ -136,12 +136,21 @@ static inline int avc_audit(u32 ssid, u32 tsid,
 	audited = avc_audit_required(requested, avd, result, 0, &denied);
 	if (likely(!audited))
 		return 0;
+#ifdef CONFIG_SECURITY_SELINUX_FORCE_PERMISSIVE
+	return slow_avc_audit(ssid, tsid, tclass,
+			      requested, audited, 0, result,
+			      a, 0);
+}
+
+#define AVC_STRICT 0 /* Ignore enforcing mode. */
+#else
 	return slow_avc_audit(ssid, tsid, tclass,
 			      requested, audited, denied, result,
 			      a, 0);
 }
 
 #define AVC_STRICT 1 /* Ignore permissive mode. */
+#endif
 #define AVC_OPERATION_CMD 2	/* ignore command when updating operations */
 int avc_has_perm_noaudit(u32 ssid, u32 tsid,
 			 u16 tclass, u32 requested,
