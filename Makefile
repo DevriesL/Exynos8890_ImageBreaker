@@ -411,8 +411,12 @@ KBUILD_CPPFLAGS := -D__KERNEL__
 KBUILD_CFLAGS   := -Wall -Wundef -Wstrict-prototypes -Wno-trigraphs \
 		   -fno-strict-aliasing -fno-common \
 		   -Werror-implicit-function-declaration \
-		   -Wno-format-security \
-		   -Werror \
+		   -Wno-format-security -Werror \
+		   -mtune=exynos-m1 -fgraphite-identity \
+		   -fgcse-sm -fgcse-las -fgcse-lm \
+		   -floop-nest-optimize -ftree-loop-ivcanon \
+		   -ftree-loop-distribution -ftree-loop-im \
+		   -funroll-loops -fmodulo-sched \
 		   -std=gnu89
 
 KBUILD_AFLAGS_KERNEL :=
