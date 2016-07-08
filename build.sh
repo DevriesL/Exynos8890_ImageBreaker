@@ -12,6 +12,10 @@
 
     make -j7 2>&1 |tee build.txt
 
+    make dtbs
+
+    tools/dtbtool -o dt.img -s 2048 -p scripts/dtc/ arch/arm64/boot/dts/
+
 mkbootimg \
       --kernel arch/arm64/boot/Image \
       --ramdisk ramdisk.packed \
