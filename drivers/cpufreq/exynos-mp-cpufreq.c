@@ -71,6 +71,9 @@ static struct lpj_info global_lpj_ref;
 static unsigned int freq_min[CL_END] __read_mostly;	/* Minimum (Big/Little) clock frequency */
 static unsigned int freq_max[CL_END] __read_mostly;	/* Maximum (Big/Little) clock frequency */
 
+static unsigned int min_flexible_freq = 1352000;
+static unsigned int max_flexible_freq = 2080000;
+
 static struct exynos_dvfs_info *exynos_info[CL_END];
 static unsigned int volt_offset;
 static struct cpufreq_freqs *freqs[CL_END];
@@ -81,9 +84,6 @@ static DEFINE_MUTEX(cpufreq_scale_lock);
 bool exynos_cpufreq_init_done;
 static bool suspend_prepared = false;
 #ifdef CONFIG_PM
-#ifdef CONFIG_SCHED_HMP
-static bool hmp_boosted = false;
-#endif
 static bool cluster1_hotplugged = false;
 #endif
 
@@ -1393,30 +1393,12 @@ static ssize_t store_cpufreq_min_limit(struct kobject *kobj, struct attribute *a
 		return -EINVAL;
 
 	if (cluster1_input >= (int)freq_min[CL_ONE]) {
-#ifdef CONFIG_SCHED_HMP
-		if (!hmp_boosted) {
-			if (set_hmp_boost(1) < 0)
-				pr_err("%s: failed HMP boost enable\n",
-							__func__);
-			else
-				hmp_boosted = true;
-		}
-#endif
-		cluster1_input = min(cluster1_input, (int)freq_max[CL_ONE]);
+		cluster1_input = min(cluster1_input, (int)min_flexible_freq);
 		if (exynos_info[CL_ZERO]->boost_freq)
 			cluster0_input = exynos_info[CL_ZERO]->boost_freq;
 		else
 			cluster0_input = core_max_qos_const[CL_ZERO].default_value;
 	} else if (cluster1_input < (int)freq_min[CL_ONE]) {
-#ifdef CONFIG_SCHED_HMP
-		if (hmp_boosted) {
-			if (set_hmp_boost(0) < 0)
-				pr_err("%s: failed HMP boost disable\n",
-							__func__);
-			else
-				hmp_boosted = false;
-		}
-#endif
 		if (cluster1_input < 0) {
 			cluster1_input = qos_min_default_value[CL_ONE];
 			cluster0_input = qos_min_default_value[CL_ZERO];
@@ -1487,7 +1469,7 @@ static ssize_t store_cpufreq_max_limit(struct kobject *kobj, struct attribute *a
 			cluster1_hotplugged = false;
 		}
 
-		cluster1_input = max(cluster1_input, (int)freq_min[CL_ONE]);
+		cluster1_input = max(cluster1_input, (int)max_flexible_freq);
 		cluster0_input = core_max_qos_const[CL_ZERO].default_value;
 	} else if (cluster1_input < (int)freq_min[CL_ONE]) {
 		if (cluster1_input < 0) {
