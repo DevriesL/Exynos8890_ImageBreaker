@@ -26,4 +26,6 @@ mkbootimg \
       --tags_offset 0x00000100 \
       --output boot.img
 
+echo -n "SEANDROIDENFORCE" >> boot.img
+
 tar -cvf boot.tar boot.img
