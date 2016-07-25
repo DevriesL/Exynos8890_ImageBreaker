@@ -221,6 +221,14 @@ config SOC_EXYNOS8890
 	select SOC_SAMSUNG
 	select SAMSUNG_DMADEV
 
+config MACH_S7_FLAT
+	bool "Samsung Galaxy S7 Flat"
+	depends on SOC_EXYNOS8890
+
+config MACH_S7_EDGE
+	bool "Samsung Galaxy S7 Edge"
+	depends on SOC_EXYNOS8890
+
 config ARCH_EXYNOS8
 	bool "SAMSUNG EXYNOS8"
 	select HAVE_ARM_SCU if SMP
