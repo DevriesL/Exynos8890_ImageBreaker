@@ -71,8 +71,8 @@ static struct lpj_info global_lpj_ref;
 static unsigned int freq_min[CL_END] __read_mostly;	/* Minimum (Big/Little) clock frequency */
 static unsigned int freq_max[CL_END] __read_mostly;	/* Maximum (Big/Little) clock frequency */
 
-static unsigned int min_flexible_freq = 1352000;
-static unsigned int max_flexible_freq = 2080000;
+static int min_flexible_freq = 1352000;
+static int max_flexible_freq = 2080000;
 
 static struct exynos_dvfs_info *exynos_info[CL_END];
 static unsigned int volt_offset;
@@ -84,7 +84,11 @@ static DEFINE_MUTEX(cpufreq_scale_lock);
 bool exynos_cpufreq_init_done;
 static bool suspend_prepared = false;
 #ifdef CONFIG_PM
+#ifdef CONFIG_SCHED_HMP
+static bool hmp_boosted = false;
+#endif
 static bool cluster1_hotplugged = false;
+static int boost_threshold_freq = 1768000;
 #endif
 
 #ifdef CONFIG_SW_SELF_DISCHARGING
@@ -1392,8 +1396,28 @@ static ssize_t store_cpufreq_min_limit(struct kobject *kobj, struct attribute *a
 	if (!sscanf(buf, "%8d", &cluster1_input))
 		return -EINVAL;
 
+#ifdef CONFIG_SCHED_HMP
+	if (cluster1_input > boost_threshold_freq) {
+		if (!hmp_boosted) {
+			if (set_hmp_boost(1) < 0)
+				pr_err("%s: failed HMP boost enable\n",
+							__func__);
+			else
+				hmp_boosted = true;
+		}
+	} else {
+		if (hmp_boosted) {
+			if (set_hmp_boost(0) < 0)
+				pr_err("%s: failed HMP boost disable\n",
+							__func__);
+			else
+				hmp_boosted = false;
+		}
+	}
+#endif	
+
 	if (cluster1_input >= (int)freq_min[CL_ONE]) {
-		cluster1_input = min(cluster1_input, (int)min_flexible_freq);
+		cluster1_input = min(cluster1_input, min_flexible_freq);
 		if (exynos_info[CL_ZERO]->boost_freq)
 			cluster0_input = exynos_info[CL_ZERO]->boost_freq;
 		else
@@ -1445,12 +1469,12 @@ static ssize_t show_cpufreq_max_limit(struct kobject *kobj,
 	return nsize;
 }
 
-static void enable_nonboot_cluster_cpus(void)
+void enable_nonboot_cluster_cpus(void)
 {
 	pm_qos_update_request(&cpufreq_cpu_hotplug_max_request, NR_CPUS);
 }
 
-static void disable_nonboot_cluster_cpus(void)
+void disable_nonboot_cluster_cpus(void)
 {
 	pm_qos_update_request(&cpufreq_cpu_hotplug_max_request, NR_CLUST1_CPUS);
 }
@@ -1469,7 +1493,7 @@ static ssize_t store_cpufreq_max_limit(struct kobject *kobj, struct attribute *a
 			cluster1_hotplugged = false;
 		}
 
-		cluster1_input = max(cluster1_input, (int)max_flexible_freq);
+		cluster1_input = max(cluster1_input, max_flexible_freq);
 		cluster0_input = core_max_qos_const[CL_ZERO].default_value;
 	} else if (cluster1_input < (int)freq_min[CL_ONE]) {
 		if (cluster1_input < 0) {
