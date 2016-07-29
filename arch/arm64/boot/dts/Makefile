@@ -4,7 +4,7 @@ dtb-$(CONFIG_ARCH_XGENE) += apm-mustang.dtb
 dtb-$(CONFIG_MACH_S7_EDGE) += exynos8890-smdk8890.dtb exynos8890-universal8890.dtb \
 				exynos8890-hero2lte_eur_open_08.dtb
 dtb-$(CONFIG_MACH_S7_FLAT) += exynos8890-smdk8890.dtb exynos8890-universal8890.dtb \
-				exynos8890-herolte_eur_open_09.dtb
+				exynos8890-herolte_eur_open_09.dtb exynos8890-herolte_eur_open_08.dtb
 
 targets += dtbs
 
