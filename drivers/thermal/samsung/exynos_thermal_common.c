@@ -38,6 +38,10 @@ unsigned long cpu_max_temp[2];
 int get_real_max_freq(cluster_type cluster);
 #endif
 
+bool is_cpu_thermal = false;
+static int enter_little_thermal_temp = 60;
+static int exit_little_thermal_temp = 55;
+
 struct exynos_thermal_zone {
 	enum thermal_device_mode mode;
 	struct thermal_zone_device *therm_dev;
@@ -407,7 +411,10 @@ static int exynos_throttle_cpu_hotplug(struct thermal_zone_device *thermal)
 			mutex_unlock(&thermal->lock);
 
 			pm_qos_update_request(&thermal_cpu_hotplug_request, NR_CLUST1_CPUS);
-		}
+		} else if (cur_temp > enter_little_thermal_temp)
+			is_cpu_thermal = true;
+		else if (cur_temp < exit_little_thermal_temp)
+			is_cpu_thermal = false;
 	}
 
 	return ret;
