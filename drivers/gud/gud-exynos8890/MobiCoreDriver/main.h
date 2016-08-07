@@ -27,7 +27,7 @@
 	dev_err(g_ctx.mcd, "%s: " fmt, __func__, ##__VA_ARGS__)
 
 #define mc_dev_info(fmt, ...) \
-	dev_info(g_ctx.mcd, "%s: " fmt, __func__, ##__VA_ARGS__)
+	do {} while (0)
 
 #ifdef DEBUG
 #define mc_dev_devel(fmt, ...) \

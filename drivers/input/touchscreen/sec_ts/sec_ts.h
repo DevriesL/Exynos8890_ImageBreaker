@@ -55,7 +55,7 @@
 })
 #else
 #define tsp_debug_dbg(mode, dev, fmt, ...)	dev_dbg(dev, fmt, ## __VA_ARGS__)
-#define tsp_debug_info(mode, dev, fmt, ...)	dev_info(dev, fmt, ## __VA_ARGS__)
+#define tsp_debug_info(mode, dev, fmt, ...)	do {} while (0)
 #define tsp_debug_err(mode, dev, fmt, ...)	dev_err(dev, fmt, ## __VA_ARGS__)
 #endif
 

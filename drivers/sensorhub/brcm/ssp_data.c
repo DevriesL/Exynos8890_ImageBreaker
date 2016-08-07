@@ -618,7 +618,7 @@ void ssp_batch_report(struct ssp_data *data)
 	int count = 0;
 	u64 timestamp = get_current_timestamp();
 
-	ssp_dbg("[SSP_BAT] LENGTH = %d, start index = %d ts %lld\n", data->batch_event.batch_length, idx_data, timestamp);
+	pr_info("[SSP_BAT] LENGTH = %d, start index = %d ts %lld\n", data->batch_event.batch_length, idx_data, timestamp);
 
 	while (idx_data < data->batch_event.batch_length)
 	{

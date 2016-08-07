@@ -283,30 +283,8 @@ inline void set_wakeup_packet_log(bool enable)
 	wakeup_log_enable = enable;
 }
 
-inline unsigned long get_log_flags(void)
-{
-	return wakeup_log_enable ? wakeup_dflags : dflags;
-}
-
 static inline bool log_enabled(u8 ch)
 {
-	unsigned long flags = get_log_flags();
-
-	if (sipc5_fmt_ch(ch))
-		return test_bit(DEBUG_FLAG_FMT, &flags);
-	else if (sipc5_boot_ch(ch))
-		return test_bit(DEBUG_FLAG_BOOT, &flags);
-	else if (sipc5_dump_ch(ch))
-		return test_bit(DEBUG_FLAG_DUMP, &flags);
-	else if (sipc5_rfs_ch(ch))
-		return test_bit(DEBUG_FLAG_RFS, &flags);
-	else if (sipc_csd_ch(ch))
-		return test_bit(DEBUG_FLAG_CSVT, &flags);
-	else if (sipc_log_ch(ch))
-		return test_bit(DEBUG_FLAG_LOG, &flags);
-	else if (sipc_ps_ch(ch))
-		return test_bit(DEBUG_FLAG_PS, &flags);
-	else
 		return false;
 }
 

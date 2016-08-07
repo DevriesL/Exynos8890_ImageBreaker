@@ -258,11 +258,7 @@ static ssize_t store_pcie(struct device *dev,
 		val = exynos_elb_readl(exynos_pcie, PCIE_APP_REQ_EXIT_L1_MODE);
 		val &= ~APP_REQ_EXIT_L1_MODE;
 		exynos_elb_writel(exynos_pcie, val, PCIE_APP_REQ_EXIT_L1_MODE);
-		dev_info(dev, "%s: Before set perst, gpio val = %d\n",
-				__func__, gpio_get_value(exynos_pcie->perst_gpio));
 		gpio_set_value(exynos_pcie->perst_gpio, 0);
-		dev_info(dev, "%s: After set perst, gpio val = %d\n",
-				__func__, gpio_get_value(exynos_pcie->perst_gpio));
 		val = exynos_elb_readl(exynos_pcie, PCIE_APP_REQ_EXIT_L1_MODE);
 		val |= APP_REQ_EXIT_L1_MODE;
 		exynos_elb_writel(exynos_pcie, val, PCIE_APP_REQ_EXIT_L1_MODE);
@@ -388,11 +384,7 @@ retry:
 	}
 
 	/* set #PERST high */
-	dev_info(dev, "%s: Before set perst, gpio val = %d\n",
-			__func__, gpio_get_value(exynos_pcie->perst_gpio));
 	gpio_set_value(exynos_pcie->perst_gpio, 1);
-	dev_info(dev, "%s: After set perst, gpio val = %d\n",
-			__func__, gpio_get_value(exynos_pcie->perst_gpio));
 	usleep_range(18000, 20000);
 
 	if (of_device_is_compatible(pp->dev->of_node, "samsung,exynos8890-pcie")) {
@@ -423,10 +415,6 @@ retry:
 	if (of_device_is_compatible(pp->dev->of_node, "samsung,exynos8890-pcie"))
 		writel(readl(exynos_pcie->phy_pcs_base + 0xEC) & ~(0x1 << 3), exynos_pcie->phy_pcs_base + 0xEC);
 
-	dev_info(dev, "D state: %x, %x\n",
-		 exynos_elb_readl(exynos_pcie, PCIE_PM_DSTATE) & 0x7,
-		 exynos_elb_readl(exynos_pcie, PCIE_ELBI_RDLH_LINKUP));
-
 	/* assert LTSSM enable */
 	exynos_elb_writel(exynos_pcie, PCIE_ELBI_LTSSM_ENABLE, PCIE_APP_LTSSM_ENABLE);
 	count = 0;
@@ -445,11 +433,7 @@ retry:
 		dev_err(dev, "%s: Link is not up, try count: %d, %x\n", __func__,
 			try_cnt, exynos_elb_readl(exynos_pcie, PCIE_ELBI_RDLH_LINKUP));
 		if (try_cnt < 10) {
-			dev_info(dev, "%s: Before set perst, gpio val = %d\n",
-					__func__, gpio_get_value(exynos_pcie->perst_gpio));
 			gpio_set_value(exynos_pcie->perst_gpio, 0);
-			dev_info(dev, "%s: After set perst, gpio val = %d\n",
-					__func__, gpio_get_value(exynos_pcie->perst_gpio));
 
 			/* LTSSM disable */
 			exynos_elb_writel(exynos_pcie, PCIE_ELBI_LTSSM_DISABLE,
@@ -465,9 +449,6 @@ retry:
 			return -EPIPE;
 		}
 	} else {
-		dev_info(dev, "%s: Link up:%x\n", __func__,
-			 exynos_elb_readl(exynos_pcie, PCIE_ELBI_RDLH_LINKUP));
-
 		if (of_device_is_compatible(pp->dev->of_node, "samsung,exynos8890-pcie")) {
 			val = exynos_elb_readl(exynos_pcie, PCIE_IRQ_PULSE);
 			exynos_elb_writel(exynos_pcie, val, PCIE_IRQ_PULSE);
@@ -523,7 +504,7 @@ static void exynos_pcie_assert_phy_reset(struct pcie_port *pp)
 
 	exynos_pcie_phy_config(exynos_pcie->phy_base, exynos_pcie->phy_pcs_base,
 				exynos_pcie->block_base, exynos_pcie->elbi_base, exynos_pcie->ch_num);
-	dev_err(pp->dev, "phy clk enable, ret value = %d\n", exynos_pcie_phy_clock_enable(&exynos_pcie->pp, 1));
+	exynos_pcie_phy_clock_enable(&exynos_pcie->pp, 1);
 
 	/* Bus number enable */
 	val = exynos_elb_readl(exynos_pcie, PCIE_SW_WAKE);
@@ -961,7 +942,7 @@ static void exynos_pcie_resumed_phydown(struct pcie_port *pp)
 	u32 val;
 
 	/* phy all power down on wifi off during suspend/resume */
-	dev_err(pp->dev, "pcie clk enable, ret value = %d\n", exynos_pcie_clock_enable(pp, 1));
+	exynos_pcie_clock_enable(pp, 1);
 
 	exynos_pcie_enable_interrupts(pp);
 	regmap_update_bits(exynos_pcie->pmureg,
@@ -993,9 +974,6 @@ int exynos_pcie_poweron(int ch_num)
 	struct pinctrl *pinctrl_reset;
 	u32 val, vendor_id, device_id;
 
-	dev_info(pp->dev, "%s, start of poweron, pcie state: %d\n", __func__,
-		 exynos_pcie->state);
-
 	if (exynos_pcie->state == STATE_LINK_DOWN) {
 #ifdef CONFIG_CPU_IDLE
 		exynos_update_ip_idle_status(exynos_pcie->idle_ip_index, 0);
@@ -1011,7 +989,7 @@ int exynos_pcie_poweron(int ch_num)
 			goto poweron_fail;
 		}
 
-		dev_err(pp->dev, "pcie clk enable, ret value = %d\n", exynos_pcie_clock_enable(pp, 1));
+		exynos_pcie_clock_enable(pp, 1);
 		regmap_update_bits(exynos_pcie->pmureg,
 				   PCIE_PHY_CONTROL + exynos_pcie->ch_num * 4,
 				   PCIE_PHY_CONTROL_MASK, 1);
@@ -1091,9 +1069,6 @@ int exynos_pcie_poweron(int ch_num)
 		enable_irq(pp->irq);
 	}
 
-	dev_info(pp->dev, "%s, end of poweron, pcie state: %d\n", __func__,
-		 exynos_pcie->state);
-
 	return 0;
 
 poweron_fail:
@@ -1111,9 +1086,6 @@ void exynos_pcie_poweroff(int ch_num)
 	struct pinctrl *pinctrl_reset;
 	unsigned long flags;
 	u32 val;
-
-	dev_info(pp->dev, "%s, start of poweroff, pcie state: %d\n", __func__,
-		 exynos_pcie->state);
 
 	if (exynos_pcie->state == STATE_LINK_UP ||
 	    exynos_pcie->state == STATE_LINK_DOWN_TRY) {
@@ -1135,11 +1107,7 @@ void exynos_pcie_poweroff(int ch_num)
 		val &= ~HISTORY_BUFFER_ENABLE;
 		exynos_elb_writel(exynos_pcie, val, PCIE_STATE_HISTORY_CHECK);
 
-		dev_info(pp->dev, "%s: Before set perst, gpio val = %d\n",
-				__func__, gpio_get_value(exynos_pcie->perst_gpio));
 		gpio_set_value(exynos_pcie->perst_gpio, 0);
-		dev_info(pp->dev, "%s: After set perst, gpio val = %d\n",
-				__func__, gpio_get_value(exynos_pcie->perst_gpio));
 
 		/* LTSSM disable */
 		writel(PCIE_ELBI_LTSSM_DISABLE, exynos_pcie->elbi_base + PCIE_APP_LTSSM_ENABLE);
@@ -1174,9 +1142,6 @@ void exynos_pcie_poweroff(int ch_num)
 		exynos_update_ip_idle_status(exynos_pcie->idle_ip_index, 1);
 #endif
 	}
-
-	dev_info(pp->dev, "%s, end of poweroff, pcie state: %d\n",  __func__,
-		 exynos_pcie->state);
 }
 EXPORT_SYMBOL(exynos_pcie_poweroff);
 
@@ -1275,11 +1240,7 @@ static int exynos_pcie_suspend_noirq(struct device *dev)
 	}
 
 	exynos_pcie_send_pme_turn_off(exynos_pcie);
-	dev_info(dev, "%s: Before set perst, gpio val = %d\n",
-			__func__, gpio_get_value(exynos_pcie->perst_gpio));
 	gpio_set_value(exynos_pcie->perst_gpio, 0);
-	dev_info(dev, "%s: After set perst, gpio val = %d\n",
-			__func__, gpio_get_value(exynos_pcie->perst_gpio));
 
 	return 0;
 }

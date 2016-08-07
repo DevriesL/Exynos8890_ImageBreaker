@@ -74,7 +74,7 @@
 #define DEVICE_ID			0x55
 
 #define ssp_dbg(format, ...) \
-	pr_info(format, ##__VA_ARGS__)
+	do {} while (0)
 #else
 #define ssp_dbg(format, ...)
 #endif
