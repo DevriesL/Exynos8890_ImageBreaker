@@ -70,7 +70,7 @@ static ssize_t store_little_thermal_temp(struct kobject *kobj, struct attribute 
 	if (!sscanf(buf, "%8d", &thermal_temp))
 		return -EINVAL;
 
-	if (thermal_temp < 40 || thermal_temp > 80) {
+	if (thermal_temp < 40 || thermal_temp > 90) {
 		pr_err("%s: invalid value (%d)\n", __func__, thermal_temp);
 		return -EINVAL;
 	}

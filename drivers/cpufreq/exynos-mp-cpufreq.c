@@ -93,7 +93,7 @@ enum cpu_dvfs_mode {
 	BALANCE_MODE,
 	PERFORMANCE_MODE,
 };
-static enum cpu_dvfs_mode current_mode = BATTERY_MODE;
+static enum cpu_dvfs_mode current_mode = BALANCE_MODE;
 
 static struct exynos_dvfs_info *exynos_info[CL_END];
 static unsigned int volt_offset;
