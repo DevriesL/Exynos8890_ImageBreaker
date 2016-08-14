@@ -105,6 +105,7 @@ static DEFINE_MUTEX(cpufreq_scale_lock);
 bool exynos_cpufreq_init_done;
 static bool suspend_prepared = false;
 #ifdef CONFIG_PM
+static bool hmp_boosted = false;
 static bool cluster1_hotplugged = false;
 extern bool is_cpu_thermal;
 #endif
@@ -1415,15 +1416,29 @@ static ssize_t store_cpufreq_min_limit(struct kobject *kobj, struct attribute *a
 		return -EINVAL;
 
 	if (cluster1_input >= (int)freq_min[CL_ONE]) {
-		if (!is_cpu_thermal && current_mode == PERFORMANCE_MODE)
+		if (!is_cpu_thermal && current_mode == PERFORMANCE_MODE) {
+			if (!hmp_boosted) {
+				if (set_hmp_boost(1) < 0)
+					pr_err("%s: failed HMP boost enable\n",
+								__func__);
+				else
+					hmp_boosted = true;
+			}
 			cluster1_input = min(cluster1_input, (int)freq_max[CL_ONE]);
-		else
+		} else
 			cluster1_input = min(cluster1_input, min_flexible_freq);
 		if (exynos_info[CL_ZERO]->boost_freq)
 			cluster0_input = exynos_info[CL_ZERO]->boost_freq;
 		else
 			cluster0_input = core_max_qos_const[CL_ZERO].default_value;
 	} else if (cluster1_input < (int)freq_min[CL_ONE]) {
+		if (hmp_boosted) {
+			if (set_hmp_boost(0) < 0)
+				pr_err("%s: failed HMP boost disable\n",
+							__func__);
+			else
+				hmp_boosted = false;
+		}
 		if (cluster1_input < 0) {
 			cluster1_input = qos_min_default_value[CL_ONE];
 			cluster0_input = qos_min_default_value[CL_ZERO];
