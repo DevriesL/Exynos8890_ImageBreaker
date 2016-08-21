@@ -3522,7 +3522,9 @@ size_t ksize(const void *object)
 	page = virt_to_head_page(object);
 
 	if (unlikely(!PageSlab(page))) {
+	#ifndef CONFIG_SENTINEL
 		WARN_ON(!PageCompound(page));
+	#endif
 		return PAGE_SIZE << compound_order(page);
 	}
 
@@ -3542,7 +3544,9 @@ void kfree(const void *x)
 
 	page = virt_to_head_page(x);
 	if (unlikely(!PageSlab(page))) {
+	#ifndef CONFIG_SENTINEL
 		BUG_ON(!PageCompound(page));
+	#endif
 		kfree_hook(x);
 		__free_kmem_pages(page, compound_order(page));
 		return;
